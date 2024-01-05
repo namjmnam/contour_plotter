@@ -1,57 +1,33 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from xml.dom import minidom
+import svgpathtools
+import numpy as np
 
-def plot_svg(svg_file):
-    # Parse the SVG file
-    doc = minidom.parse(svg_file)
-    paths = [path for path in doc.getElementsByTagName('path')]
-    doc.unlink()
+def parse_svg(file_path):
+    paths, attributes = svgpathtools.svg2paths(file_path)
+    circles = []
+    lines = []
 
-    # Create a plot
-    fig, ax = plt.subplots()
-    ax.set_aspect('equal', adjustable='datalim')
-    ax.set_axis_off()
+    for path, attribute in zip(paths, attributes):
+        if 'circle' in attribute['id']:
+            # Handle circle
+            center = np.array(path[0].start)
+            radius = np.abs(path[0].end - path[0].start)
+            theta = np.linspace(0, 2 * np.pi, 100)
+            x = center.real + radius * np.cos(theta)
+            y = center.imag + radius * np.sin(theta)
+            circles.append([x, y, np.zeros_like(x)])  # Add zero z-coordinate
+        elif 'line' in attribute['id']:
+            # Handle line
+            start_point = np.array(path[0].start)
+            end_point = np.array(path[0].end)
+            x = [start_point.real, end_point.real]
+            y = [start_point.imag, end_point.imag]
+            lines.append([x, y, [0, 0]])  # Add zero z-coordinate for line start and end
 
-    # Read each path and add it to the plot
-    for path in paths:
-        path_data = path.getAttribute('d')
-        patch = mpatches.PathPatch(plt.Path.make_compound_path(plt.Path(*svg_path_to_polygons(path_data))),
-                                   facecolor='none', edgecolor='black', lw=1)
-        ax.add_patch(patch)
+    return circles, lines
 
-    # Show the plot
-    plt.show()
+# Example usage
+file_path = "./JtossSVG1.svg"
+circles, lines = parse_svg(file_path)
 
-# Helper function to convert SVG path to polygons
-def svg_path_to_polygons(svg_path):
-    import matplotlib.pyplot as plt
-    from matplotlib.path import Path
-    from svgpathtools import parse_path
-    import svgpathtools
-
-    path = parse_path(svg_path)
-    polygons = []
-    codes = []
-    last_pos = None
-
-    for segment in path:
-        if isinstance(segment, svgpathtools.Line):
-            codes += [Path.MOVETO if last_pos is None else Path.LINETO, Path.LINETO]
-            polygons += [segment.start, segment.end]
-            last_pos = segment.end
-        elif isinstance(segment, svgpathtools.CubicBezier):
-            curve_points = [segment.start, segment.control1, segment.control2, segment.end]
-            codes += [Path.MOVETO if last_pos is None else Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]
-            polygons += curve_points
-            last_pos = segment.end
-        elif isinstance(segment, svgpathtools.QuadraticBezier):
-            curve_points = [segment.start, segment.control, segment.end]
-            codes += [Path.MOVETO if last_pos is None else Path.LINETO, Path.CURVE3, Path.CURVE3]
-            polygons += curve_points
-            last_pos = segment.end
-
-    return polygons, codes
-
-plot_svg("polyline_circles.svg")
-
+print(circles)
+print(lines)
