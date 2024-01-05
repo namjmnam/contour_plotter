@@ -12,10 +12,10 @@ def create_flat_circles(num_circles=5, radius_step=1, num_points=100):
         circles.append([x, y, z])  # x, y, z for each circle
     return circles
 
-def save_circles_to_svg(circles, filename="circles.svg"):
+def save_circles_to_svg(contours, filename="circles.svg"):
     dwg = Drawing(filename, profile='tiny')
 
-    for circle in circles:
+    for circle in contours:
         # We only need the radius for the SVG circle element
         radius = np.max(circle[0])  # Assuming the first index is x and it's a full circle
         dwg.add(dwg.circle(center=(0, 0), r=radius, stroke="black", fill="none"))
