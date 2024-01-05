@@ -1,33 +1,33 @@
-import svgpathtools
-import numpy as np
+import matplotlib.pyplot as plt
+from svg.path import parse_path
+from xml.dom import minidom
 
-def parse_svg(file_path):
-    paths, attributes = svgpathtools.svg2paths(file_path)
-    circles = []
-    lines = []
+# Function to extract paths from the SVG file
+def extract_svg_paths(svg_file):
+    doc = minidom.parse(svg_file)  # Parse the SVG file
+    path_strings = [path.getAttribute('d') for path in doc.getElementsByTagName('path')]
+    doc.unlink()
+    return path_strings
 
-    for path, attribute in zip(paths, attributes):
-        if 'circle' in attribute['id']:
-            # Handle circle
-            center = np.array(path[0].start)
-            radius = np.abs(path[0].end - path[0].start)
-            theta = np.linspace(0, 2 * np.pi, 100)
-            x = center.real + radius * np.cos(theta)
-            y = center.imag + radius * np.sin(theta)
-            circles.append([x, y, np.zeros_like(x)])  # Add zero z-coordinate
-        elif 'line' in attribute['id']:
-            # Handle line
-            start_point = np.array(path[0].start)
-            end_point = np.array(path[0].end)
-            x = [start_point.real, end_point.real]
-            y = [start_point.imag, end_point.imag]
-            lines.append([x, y, [0, 0]])  # Add zero z-coordinate for line start and end
+# Function to plot paths
+def plot_paths(paths):
+    for path_string in paths:
+        path = parse_path(path_string)
 
-    return circles, lines
+        for segment in path:
+            # Assuming segment is a Line or CubicBezier, more types can be added
+            if hasattr(segment, 'start') and hasattr(segment, 'end'):
+                x_values = [segment.start.real, segment.end.real]
+                y_values = [segment.start.imag, segment.end.imag]
+                plt.plot(x_values, y_values, 'b')
+            # Add more handling here for other segment types if needed
 
-# Example usage
-file_path = "./JtossSVG1.svg"
-circles, lines = parse_svg(file_path)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
 
-print(circles)
-print(lines)
+# SVG file path
+svg_file = './JtossSVG1.svg'
+
+# Extract and plot paths
+paths = extract_svg_paths(svg_file)
+plot_paths(paths)
