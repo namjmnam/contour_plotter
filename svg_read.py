@@ -27,6 +27,7 @@ def plot_interactive_paths(paths):
     fig, ax = plt.subplots()
 
     path_data = []
+    text_labels = []  # List to store text labels
 
     def on_pick(event):
         artist = event.artist
@@ -35,7 +36,15 @@ def plot_interactive_paths(paths):
         if z is not None:
             path_data[path_index]['z'] = z
             artist.set_color('blue')  # Change color to blue
-            fig.canvas.draw_idle()  # Update the figure
+            x, y = artist.get_data()
+            # Create or update the text label
+            if len(text_labels) > path_index:
+                text_labels[path_index].set_text(f'{z:.2f}')
+                text_labels[path_index].set_visible(True)
+            else:
+                label = ax.text(x[0], y[0], f'{z:.2f}', color='blue')
+                text_labels.append(label)
+                fig.canvas.draw_idle()  # Update the figure
 
     for index, path_string in enumerate(paths):
         path = parse_path(path_string)
@@ -202,8 +211,8 @@ def show_3d_plot(path_data):
     max_range = max(np.max(all_x) - np.min(all_x), np.max(all_y) - np.min(all_y))
 
     # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 1200), 
-                                 np.linspace(np.min(all_y), np.max(all_y), 1200))
+    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 300), 
+                                 np.linspace(np.min(all_y), np.max(all_y), 300))
 
     # Flatten the grid for griddata input
     grid_x_flat = grid_x.flatten()
@@ -268,4 +277,3 @@ path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 show_3d_plot(path_data)
 
 # show_3d_plot_with_rbf(path_data)
-
