@@ -97,34 +97,28 @@ def plot_3d_surfaces(path_data):
     plt.show()
 
 # Function to show 3D plot with contours projecting upwards
-def show_3d_plot(path_data):
+def show_wall_plot(path_data):
     fig_3d = plt.figure()
     ax_3d = fig_3d.add_subplot(111, projection='3d')
 
-    # Determine the limits for the grid
-    all_x = np.hstack([path['x'] for path in path_data])
-    all_y = np.hstack([path['y'] for path in path_data])
-    max_range = max(np.max(all_x) - np.min(all_x), np.max(all_y) - np.min(all_y))
+    for path in path_data:
+        x = np.array(path['x'])
+        y = np.array(path['y'])
+        z = np.array([path['z']] * len(x))
 
-    # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 500), 
-                                 np.linspace(np.min(all_y), np.max(all_y), 500))
+        # Duplicate x, y, and z for the base of the vertical lines
+        x_base = np.repeat(x, 2)
+        y_base = np.repeat(y, 2)
+        z_base = np.repeat(z, 2)
+        z_base[::2] = 0  # Set every other z value to 0 for the base
 
-    # Flatten the grid for griddata input
-    grid_x_flat = grid_x.flatten()
-    grid_y_flat = grid_y.flatten()
+        # Create vertical lines for each contour
+        ax_3d.plot(x_base, y_base, z_base, color='b')
 
-    # Prepare contour data for interpolation
-    points = np.vstack([all_x, all_y]).T
-    values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
-
-    # Interpolate z values on the grid
-    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='linear') # cubic
-    grid_z = grid_z.reshape(grid_x.shape)
-
-    # Create a surface plot
-    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
-    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
+    # Set the limits of the axes
+    ax_3d.set_xlim([min(path['x']), max(path['x'])])
+    ax_3d.set_ylim([min(path['y']), max(path['y'])])
+    ax_3d.set_zlim([0, max(path['z'] for path in path_data)])
 
     plt.show()
 
@@ -144,6 +138,38 @@ def show_3d_contour_plot(path_data):
     ax.set_zlabel('Z Axis')
     plt.show()
 
+# Function to show 3D plot with contours projecting upwards
+def show_3d_plot(path_data):
+    fig_3d = plt.figure()
+    ax_3d = fig_3d.add_subplot(111, projection='3d')
+
+    # Determine the limits for the grid
+    all_x = np.hstack([path['x'] for path in path_data])
+    all_y = np.hstack([path['y'] for path in path_data])
+    max_range = max(np.max(all_x) - np.min(all_x), np.max(all_y) - np.min(all_y))
+
+    # Create a grid for the surface plot
+    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 300), 
+                                 np.linspace(np.min(all_y), np.max(all_y), 300))
+
+    # Flatten the grid for griddata input
+    grid_x_flat = grid_x.flatten()
+    grid_y_flat = grid_y.flatten()
+
+    # Prepare contour data for interpolation
+    points = np.vstack([all_x, all_y]).T
+    values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
+
+    # Interpolate z values on the grid
+    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='linear')
+    grid_z = grid_z.reshape(grid_x.shape)
+
+    # Create a surface plot
+    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
+    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
+
+    plt.show()
+
 # SVG file path
 svg_file = './p5oil.svg'
 
@@ -155,5 +181,6 @@ path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 
 # plot_3d_surfaces(path_data)
 # show_3d_contour_plot(path_data)
+# show_wall_plot(path_data)
 
 show_3d_plot(path_data)
