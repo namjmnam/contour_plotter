@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from svg.path import parse_path
 from xml.dom import minidom
-import numpy as np
 
 # Function to extract paths from the SVG file
 def extract_svg_paths(svg_file):
@@ -14,29 +13,34 @@ def extract_svg_paths(svg_file):
 def plot_interactive_paths(paths):
     fig, ax = plt.subplots()
 
-    points = []  # List to store the points
+    path_data = []  # List to store path data and their Z values
 
     def on_pick(event):
-        # This function will be called when a point is clicked
-        point = event.artist
-        x, y = point.get_data()
-        z = float(input(f"Enter Z value for point ({x[0]}, {y[0]}): "))  # Ask user for Z value
-        point.set_color('green')  # Change color to indicate the point has a Z value set
-        points.append((x[0], y[0], z))  # Add the point and Z value to the list
-        plt.draw()
+        # This function will be called when a path point is clicked
+        path_index = event.artist.get_gid()
+        z = float(input(f"Enter Z value for path {path_index}: "))  # Ask user for Z value
+        # Update the Z value for all points in the path
+        path_data[path_index]['z'] = z
 
-    for path_string in paths:
+    for index, path_string in enumerate(paths):
         path = parse_path(path_string)
+        x_values, y_values = [], []
 
         for segment in path:
             if hasattr(segment, 'start') and hasattr(segment, 'end'):
-                x_values = [segment.start.real, segment.end.real]
-                y_values = [segment.start.imag, segment.end.imag]
-                line, = ax.plot(x_values, y_values, 'b')
+                x_values.extend([segment.start.real, segment.end.real])
+                y_values.extend([segment.start.imag, segment.end.imag])
 
-                # Add clickable red dot at the start of the segment
-                red_dot, = ax.plot(segment.start.real, segment.start.imag, 'ro', picker=5, markersize=8)
-                red_dot.set_picker(5)  # 5 points tolerance
+        # Plot the path
+        ax.plot(x_values, y_values, 'b')
+
+        # Add a clickable point for the path
+        # For simplicity, placing the clickable point at the start of the path
+        clickable_point, = ax.plot(x_values[0], y_values[0], 'ro', picker=5, markersize=8, gid=index)
+        clickable_point.set_picker(5)  # 5 points tolerance
+
+        # Store the path data
+        path_data.append({'x': x_values, 'y': y_values, 'z': 0})
 
     # Connect the pick event to the on_pick function
     fig.canvas.mpl_connect('pick_event', on_pick)
@@ -44,13 +48,12 @@ def plot_interactive_paths(paths):
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
-    return points
+    return path_data
 
 # SVG file path
 svg_file = './JtossSVG1.svg'
 
 # Extract and plot paths interactively
-paths = extract_svg_paths(svg_file)
-points_with_z = plot_interactive_paths(paths)
+path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 
-# You can now use points_with_z for further processing
+# path_data now contains X, Y coordinates and Z value for each path
