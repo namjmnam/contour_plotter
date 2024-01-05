@@ -2,6 +2,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from svg.path import parse_path
 from xml.dom import minidom
+import tkinter as tk
+from tkinter import simpledialog
+
+# Initialize Tkinter root - needed for dialog
+tk_root = tk.Tk()
+tk_root.withdraw()  # We don't need a full GUI, so keep the root window from appearing
 
 # Function to extract paths from the SVG file
 def extract_svg_paths(svg_file):
@@ -19,9 +25,9 @@ def plot_interactive_paths(paths):
     def on_pick(event):
         # This function will be called when a path point is clicked
         path_index = event.artist.get_gid()
-        z = float(input(f"Enter Z value for path {path_index}: "))  # Ask user for Z value
-        # Update the Z value for all points in the path
-        path_data[path_index]['z'] = z
+        z = simpledialog.askfloat("Input", f"Enter Z value for path {path_index}:", parent=tk_root)
+        if z is not None:  # Check if the user entered a value
+            path_data[path_index]['z'] = z
 
     for index, path_string in enumerate(paths):
         path = parse_path(path_string)
