@@ -220,6 +220,7 @@ def show_3d_plot(path_data):
 
     plt.show()
 
+# Function to show 3D plot using RBF interpolation
 def show_3d_plot_with_rbf(path_data):
     fig_3d = plt.figure()
     ax_3d = fig_3d.add_subplot(111, projection='3d')
@@ -247,6 +248,8 @@ def show_3d_plot_with_rbf(path_data):
 
 
 # SVG file path
+# svg_file = './p5oil-modified.svg'
+# svg_file = './p5oil.svg'
 svg_file = './JtossSVG2.svg'
 
 # Extract and plot paths interactively
@@ -259,7 +262,7 @@ path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 # show_3d_contour_plot(path_data)
 # show_wall_plot(path_data)
 
-# show_3d_plot(path_data)
+show_3d_plot(path_data)
 
-show_3d_plot_with_rbf(path_data)
+# show_3d_plot_with_rbf(path_data)
 
