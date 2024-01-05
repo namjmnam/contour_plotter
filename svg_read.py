@@ -4,6 +4,7 @@ from svg.path import parse_path
 from xml.dom import minidom
 import tkinter as tk
 from tkinter import simpledialog
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 
 # Initialize Tkinter root - needed for dialog
@@ -67,6 +68,32 @@ def plot_3d_paths(path_data):
 
     plt.show()
 
+# Function to plot 3D surfaces based on contours
+def plot_3d_surfaces(path_data):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for path in path_data:
+        x = path['x']
+        y = path['y']
+        z = path['z']
+
+        # Create vertices for each polygon slice
+        verts = [list(zip(x, y, [z] * len(x)))]
+        
+        # Create a Poly3DCollection object
+        poly = Poly3DCollection(verts, alpha=0.5)
+        
+        # Add the polygon to the axes
+        ax.add_collection3d(poly)
+
+    # Set the limits of the axes
+    ax.set_xlim([min(path['x']), max(path['x'])])
+    ax.set_ylim([min(path['y']), max(path['y'])])
+    ax.set_zlim([0, max(path['z'] for path in path_data)])
+
+    plt.show()
+
 # SVG file path
 svg_file = './p5oil.svg'
 
@@ -75,3 +102,5 @@ path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 
 # Plot the paths in 3D
 plot_3d_paths(path_data)
+
+plot_3d_surfaces(path_data)
