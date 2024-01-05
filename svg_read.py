@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import simpledialog
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
+from scipy.spatial import Delaunay
 
 # Initialize Tkinter root - needed for dialog
 tk_root = tk.Tk()
@@ -94,6 +95,49 @@ def plot_3d_surfaces(path_data):
 
     plt.show()
 
+# Function to show 3D plot with applied z values
+def show_3d_plot(path_data):
+    fig_3d = plt.figure()
+    ax_3d = fig_3d.add_subplot(111, projection='3d')
+    
+    # Determine the max value for the grid based on path data
+    max_x = max(max(path['x']) for path in path_data)
+    max_y = max(max(path['y']) for path in path_data)
+    max_val = max(max_x, max_y)
+
+    # Create a grid for the surface plot
+    grid_x, grid_y = np.meshgrid(np.linspace(-max_val, max_val, 300), np.linspace(-max_val, max_val, 300))
+    grid_z = np.zeros_like(grid_x)
+
+    # Calculate the z values on the grid
+    for path in path_data:
+        x, y, z = path['x'], path['y'], path['z']
+        # This part needs to be adapted based on how you want to apply the z values
+        for i in range(len(x)-1):
+            grid_z += np.where((grid_x >= x[i]) & (grid_x <= x[i+1]) & (grid_y >= y[i]) & (grid_y <= y[i+1]), z, 0)
+
+    # Create a surface plot
+    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
+    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
+
+    plt.show()
+
+def show_3d_contour_plot(path_data):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for path in path_data:
+        # Combine x, y, and z values for triangulation
+        xyz = np.vstack((np.array(path['x']), np.array(path['y']), np.array([path['z']] * len(path['x'])))).T
+        if len(xyz) > 3:  # Need at least 4 points to create a triangulation
+            tri = Delaunay(xyz[:, :2])  # 2D Delaunay triangulation, ignore Z
+            ax.plot_trisurf(xyz[:, 0], xyz[:, 1], xyz[:, 2], triangles=tri.simplices, cmap='viridis', alpha=0.6)
+
+    ax.set_xlabel('X Axis')
+    ax.set_ylabel('Y Axis')
+    ax.set_zlabel('Z Axis')
+    plt.show()
+
 # SVG file path
 svg_file = './p5oil.svg'
 
@@ -101,6 +145,9 @@ svg_file = './p5oil.svg'
 path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 
 # Plot the paths in 3D
-plot_3d_paths(path_data)
+# plot_3d_paths(path_data)
 
-plot_3d_surfaces(path_data)
+# plot_3d_surfaces(path_data)
+# show_3d_contour_plot(path_data)
+
+# show_3d_plot(path_data)

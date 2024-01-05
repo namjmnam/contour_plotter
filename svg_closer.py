@@ -1,6 +1,10 @@
 from xml.etree import ElementTree as ET
 
-def remove_open_paths(svg_content):
+def remove_open_paths(svg_file_path, output_file_path):
+    # Read the SVG file
+    with open(svg_file_path, 'r', encoding='utf-8') as file:
+        svg_content = file.read()
+
     # Parse the SVG content
     tree = ET.ElementTree(ET.fromstring(svg_content))
     root = tree.getroot()
@@ -17,18 +21,12 @@ def remove_open_paths(svg_content):
         if 'Z' not in d_attr and 'z' not in d_attr:
             root.remove(path)
 
-    # Return the modified SVG content
-    return ET.tostring(root, encoding='unicode')
+    # Write the modified SVG content to a new file
+    tree.write(output_file_path, encoding='unicode')
 
-# Your SVG content
-svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_14" data-name="Layer 14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3315.21 2892.83">
-    <!-- SVG paths here -->
-</svg>
-'''
+# Specify the file paths
+input_svg_file = './p5oil.svg'  # Change to your input file path
+output_svg_file = './p5oil-modified.svg'  # Change to your desired output file path
 
-# Process the SVG to remove open paths
-processed_svg = remove_open_paths(svg_content)
-
-# Output the processed SVG content
-print(processed_svg)
+# Process the SVG and save the result
+remove_open_paths(input_svg_file, output_svg_file)
