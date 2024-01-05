@@ -29,10 +29,13 @@ def plot_interactive_paths(paths):
     path_data = []
 
     def on_pick(event):
-        path_index = event.artist.get_gid()
+        artist = event.artist
+        path_index = artist.get_gid()
         z = simpledialog.askfloat("Input", f"Enter Z value for path {path_index}:", parent=tk_root)
         if z is not None:
             path_data[path_index]['z'] = z
+            artist.set_color('blue')  # Change color to blue
+            fig.canvas.draw_idle()  # Update the figure
 
     for index, path_string in enumerate(paths):
         path = parse_path(path_string)
@@ -211,7 +214,7 @@ def show_3d_plot(path_data):
     values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
 
     # Interpolate z values on the grid
-    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='linear')
+    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest') # test with cubic / linear
     grid_z = grid_z.reshape(grid_x.shape)
 
     # Create a surface plot
@@ -249,8 +252,8 @@ def show_3d_plot_with_rbf(path_data):
 
 # SVG file path
 # svg_file = './p5oil-modified.svg'
-# svg_file = './p5oil.svg'
-svg_file = './JtossSVG2.svg'
+svg_file = './p5oil.svg'
+# svg_file = './JtossSVG2.svg'
 
 # Extract and plot paths interactively
 path_data = plot_interactive_paths(extract_svg_paths(svg_file))
