@@ -4,6 +4,7 @@ from svg.path import parse_path
 from xml.dom import minidom
 import tkinter as tk
 from tkinter import simpledialog
+import numpy as np
 
 # Initialize Tkinter root - needed for dialog
 tk_root = tk.Tk()
@@ -20,35 +21,33 @@ def extract_svg_paths(svg_file):
 def plot_interactive_paths(paths):
     fig, ax = plt.subplots()
 
-    path_data = []  # List to store path data and their Z values
+    path_data = []
 
     def on_pick(event):
-        # This function will be called when a path point is clicked
         path_index = event.artist.get_gid()
         z = simpledialog.askfloat("Input", f"Enter Z value for path {path_index}:", parent=tk_root)
-        if z is not None:  # Check if the user entered a value
+        if z is not None:
             path_data[path_index]['z'] = z
 
     for index, path_string in enumerate(paths):
         path = parse_path(path_string)
-        x_values, y_values = [], []
+        path_points = []
 
         for segment in path:
-            if hasattr(segment, 'start') and hasattr(segment, 'end'):
-                x_values.extend([segment.start.real, segment.end.real])
-                y_values.extend([segment.start.imag, segment.end.imag])
+            # Sampling points from each segment
+            segment_points = np.array([segment.point(t) for t in np.linspace(0, 1, 50)])
+            path_points.extend(segment_points)
 
-        # Plot the path
+        x_values = [p.real for p in path_points]
+        y_values = [p.imag for p in path_points]
+
         ax.plot(x_values, y_values, 'b')
 
-        # Add a clickable point for the path
         clickable_point, = ax.plot(x_values[0], y_values[0], 'ro', picker=5, markersize=8, gid=index)
-        clickable_point.set_picker(5)  # 5 points tolerance
+        clickable_point.set_picker(5)
 
-        # Store the path data
         path_data.append({'x': x_values, 'y': y_values, 'z': 0})
 
-    # Connect the pick event to the on_pick function
     fig.canvas.mpl_connect('pick_event', on_pick)
 
     plt.gca().set_aspect('equal', adjustable='box')
