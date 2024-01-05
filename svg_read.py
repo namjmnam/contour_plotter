@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import simpledialog
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
+from scipy.interpolate import griddata
 from scipy.spatial import Delaunay
 
 # Initialize Tkinter root - needed for dialog
@@ -95,26 +96,31 @@ def plot_3d_surfaces(path_data):
 
     plt.show()
 
-# Function to show 3D plot with applied z values
+# Function to show 3D plot with contours projecting upwards
 def show_3d_plot(path_data):
     fig_3d = plt.figure()
     ax_3d = fig_3d.add_subplot(111, projection='3d')
-    
-    # Determine the max value for the grid based on path data
-    max_x = max(max(path['x']) for path in path_data)
-    max_y = max(max(path['y']) for path in path_data)
-    max_val = max(max_x, max_y)
+
+    # Determine the limits for the grid
+    all_x = np.hstack([path['x'] for path in path_data])
+    all_y = np.hstack([path['y'] for path in path_data])
+    max_range = max(np.max(all_x) - np.min(all_x), np.max(all_y) - np.min(all_y))
 
     # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(-max_val, max_val, 300), np.linspace(-max_val, max_val, 300))
-    grid_z = np.zeros_like(grid_x)
+    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 500), 
+                                 np.linspace(np.min(all_y), np.max(all_y), 500))
 
-    # Calculate the z values on the grid
-    for path in path_data:
-        x, y, z = path['x'], path['y'], path['z']
-        # This part needs to be adapted based on how you want to apply the z values
-        for i in range(len(x)-1):
-            grid_z += np.where((grid_x >= x[i]) & (grid_x <= x[i+1]) & (grid_y >= y[i]) & (grid_y <= y[i+1]), z, 0)
+    # Flatten the grid for griddata input
+    grid_x_flat = grid_x.flatten()
+    grid_y_flat = grid_y.flatten()
+
+    # Prepare contour data for interpolation
+    points = np.vstack([all_x, all_y]).T
+    values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
+
+    # Interpolate z values on the grid
+    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='linear') # cubic
+    grid_z = grid_z.reshape(grid_x.shape)
 
     # Create a surface plot
     surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
@@ -150,4 +156,4 @@ path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 # plot_3d_surfaces(path_data)
 # show_3d_contour_plot(path_data)
 
-# show_3d_plot(path_data)
+show_3d_plot(path_data)
