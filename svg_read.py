@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from svg.path import parse_path
 from xml.dom import minidom
 
@@ -35,7 +36,6 @@ def plot_interactive_paths(paths):
         ax.plot(x_values, y_values, 'b')
 
         # Add a clickable point for the path
-        # For simplicity, placing the clickable point at the start of the path
         clickable_point, = ax.plot(x_values[0], y_values[0], 'ro', picker=5, markersize=8, gid=index)
         clickable_point.set_picker(5)  # 5 points tolerance
 
@@ -50,10 +50,23 @@ def plot_interactive_paths(paths):
 
     return path_data
 
+# Function to plot paths in 3D
+def plot_3d_paths(path_data):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for path in path_data:
+        # Each path's Z value is constant across all its points
+        z_values = [path['z']] * len(path['x'])
+        ax.plot(path['x'], path['y'], z_values)
+
+    plt.show()
+
 # SVG file path
 svg_file = './JtossSVG1.svg'
 
 # Extract and plot paths interactively
 path_data = plot_interactive_paths(extract_svg_paths(svg_file))
 
-# path_data now contains X, Y coordinates and Z value for each path
+# Plot the paths in 3D
+plot_3d_paths(path_data)
