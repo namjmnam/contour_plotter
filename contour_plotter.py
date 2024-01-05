@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import tkinter as tk
+from tkinter import filedialog
 from tkinter.simpledialog import askstring
 from matplotlib import cm
 
@@ -18,21 +19,21 @@ def create_flat_circles(num_circles=5, radius_step=1, num_points=100):
         circles.append([x, y, z])  # x, y, z for each circle
     return circles
 
-# # Function to parse CSV file and extract points
-# def load_csv_file(file_path):
-#     with open(file_path, newline='') as csvfile:
-#         csv_reader = csv.reader(csvfile, delimiter=',')
-#         # Extract x and y coordinates, assuming they are stored in the first two columns
-#         x_coords, y_coords = zip(*((float(row[0]), float(row[1])) for row in csv_reader))
-#     return list(x_coords), list(y_coords), [0.0] * len(x_coords)  # z-coordinates initialized to 0
+# Function to parse CSV file and extract points
+def load_csv_file(file_path):
+    with open(file_path, newline='') as csvfile:
+        csv_reader = csv.reader(csvfile, delimiter=',')
+        # Extract x and y coordinates, assuming they are stored in the first two columns
+        x_coords, y_coords = zip(*((float(row[0]), float(row[1])) for row in csv_reader))
+    return list(x_coords), list(y_coords), [0.0] * len(x_coords)  # z-coordinates initialized to 0
 
-# # Ask the user to upload a CSV file and load it
-# def upload_and_load_csv():
-#     file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv"), ("Text files", "*.txt")])
-#     if file_path:
-#         return load_csv_file(file_path)
-#     else:
-#         return None, None, None
+# Ask the user to upload a CSV file and load it
+def upload_and_load_csv():
+    file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv"), ("Text files", "*.txt")])
+    if file_path:
+        return load_csv_file(file_path)
+    else:
+        return None, None, None
 
 def on_pick(event):
     circle_index = event.artist.get_gid()
@@ -68,8 +69,8 @@ def show_3d_plot():
 circles = create_flat_circles()
 
 # Create a main window for Tkinter
-main_window = tk.Tk()
-main_window.title("Circle Height Adjustment")
+# main_window = tk.Tk()
+# main_window.title("Circle Height Adjustment")
 
 # Set the radius step as a variable accessible in the scope of the show_3d_plot function
 radius_step = 1
