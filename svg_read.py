@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from xml.dom import minidom
-import svgpathtools
 
 def plot_svg(svg_file):
     # Parse the SVG file
@@ -29,6 +28,7 @@ def svg_path_to_polygons(svg_path):
     import matplotlib.pyplot as plt
     from matplotlib.path import Path
     from svgpathtools import parse_path
+    import svgpathtools
 
     path = parse_path(svg_path)
     polygons = []
@@ -53,5 +53,5 @@ def svg_path_to_polygons(svg_path):
 
     return polygons, codes
 
-plot_svg("flat_circles.svg")
+plot_svg("polyline_circles.svg")
 

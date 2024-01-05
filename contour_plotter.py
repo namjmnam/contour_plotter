@@ -69,8 +69,8 @@ def show_3d_plot():
 circles = create_flat_circles()
 
 # Create a main window for Tkinter
-# main_window = tk.Tk()
-# main_window.title("Circle Height Adjustment")
+main_window = tk.Tk()
+main_window.title("Circle Height Adjustment")
 
 # Set the radius step as a variable accessible in the scope of the show_3d_plot function
 radius_step = 1
