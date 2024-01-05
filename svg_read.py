@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 from scipy.interpolate import griddata
 from scipy.spatial import Delaunay
+import random
 
 # Initialize Tkinter root - needed for dialog
 tk_root = tk.Tk()
@@ -41,6 +42,9 @@ def plot_interactive_paths(paths):
             segment_points = np.array([segment.point(t) for t in np.linspace(0, 1, 50)])
             path_points.extend(segment_points)
 
+        # Assign a random Z value to each path
+        random_z = random.uniform(10, 50)  # You can adjust the range as needed
+
         x_values = [p.real for p in path_points]
         y_values = [p.imag for p in path_points]
 
@@ -49,7 +53,7 @@ def plot_interactive_paths(paths):
         clickable_point, = ax.plot(x_values[0], y_values[0], 'ro', picker=5, markersize=8, gid=index)
         clickable_point.set_picker(5)
 
-        path_data.append({'x': x_values, 'y': y_values, 'z': 0})
+        path_data.append({'x': x_values, 'y': y_values, 'z': random_z})
 
     fig.canvas.mpl_connect('pick_event', on_pick)
 
@@ -149,8 +153,8 @@ def show_3d_plot(path_data):
     max_range = max(np.max(all_x) - np.min(all_x), np.max(all_y) - np.min(all_y))
 
     # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 300), 
-                                 np.linspace(np.min(all_y), np.max(all_y), 300))
+    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 1200), 
+                                 np.linspace(np.min(all_y), np.max(all_y), 1200))
 
     # Flatten the grid for griddata input
     grid_x_flat = grid_x.flatten()
