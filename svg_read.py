@@ -200,38 +200,6 @@ def interpolate_z_values(points, values, grid_size, method='linear', plot=False)
 
     return grid_z
 
-# Function to show 3D plot with contours projecting upwards
-def show_3d_plot(path_data):
-    fig_3d = plt.figure()
-    ax_3d = fig_3d.add_subplot(111, projection='3d')
-
-    # Determine the limits for the grid
-    all_x = np.hstack([path['x'] for path in path_data])
-    all_y = np.hstack([path['y'] for path in path_data])
-    max_range = max(np.max(all_x) - np.min(all_x), np.max(all_y) - np.min(all_y))
-
-    # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 300), 
-                                 np.linspace(np.min(all_y), np.max(all_y), 300))
-
-    # Flatten the grid for griddata input
-    grid_x_flat = grid_x.flatten()
-    grid_y_flat = grid_y.flatten()
-
-    # Prepare contour data for interpolation
-    points = np.vstack([all_x, all_y]).T
-    values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
-
-    # Interpolate z values on the grid
-    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest') # test with cubic / linear
-    grid_z = grid_z.reshape(grid_x.shape)
-
-    # Create a surface plot
-    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
-    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
-
-    plt.show()
-
 # Function to show 3D plot using RBF interpolation
 def show_3d_plot_with_rbf(path_data):
     fig_3d = plt.figure()
@@ -258,6 +226,39 @@ def show_3d_plot_with_rbf(path_data):
 
     plt.show()
 
+# Function to show 3D plot with contours projecting upwards
+def show_3d_plot(path_data):
+    fig_3d = plt.figure()
+    ax_3d = fig_3d.add_subplot(111, projection='3d')
+
+    # Determine the limits for the grid
+    all_x = np.hstack([path['x'] for path in path_data])
+    all_y = np.hstack([path['y'] for path in path_data])
+
+    # Adjust the number of points in the grid (making the grid denser)
+    num_points = 600  # Increase this number for a denser grid
+
+    # Create a grid for the surface plot
+    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), num_points), 
+                                 np.linspace(np.min(all_y), np.max(all_y), num_points))
+
+    # Flatten the grid for griddata input
+    grid_x_flat = grid_x.flatten()
+    grid_y_flat = grid_y.flatten()
+
+    # Prepare contour data for interpolation
+    points = np.vstack([all_x, all_y]).T
+    values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
+
+    # Interpolate z values on the grid
+    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest')  # You can experiment with 'cubic' or 'linear'
+    grid_z = grid_z.reshape(grid_x.shape)
+
+    # Create a surface plot
+    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
+    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
+
+    plt.show()
 
 # SVG file path
 # svg_file = './p5oil-modified.svg'
