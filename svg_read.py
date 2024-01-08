@@ -4,12 +4,9 @@ from svg.path import parse_path
 from xml.dom import minidom
 import tkinter as tk
 from tkinter import simpledialog
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 from scipy.interpolate import griddata
-from scipy.spatial import Delaunay
 import random
-from scipy.interpolate import Rbf
 
 # Initialize Tkinter root - needed for dialog
 tk_root = tk.Tk()
@@ -56,7 +53,7 @@ def plot_interactive_paths(paths):
             path_points.extend(segment_points)
 
         # Assign a random Z value to each path
-        random_z = random.uniform(10, 50)  # You can adjust the range as needed
+        random_z = random.uniform(1, 20)  # You can adjust the range as needed
 
         x_values = [p.real for p in path_points]
         y_values = [p.imag for p in path_points]
@@ -75,206 +72,64 @@ def plot_interactive_paths(paths):
 
     return path_data
 
-# Function to plot paths in 3D
-def plot_3d_paths(path_data):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    for path in path_data:
-        # Each path's Z value is constant across all its points
-        z_values = [path['z']] * len(path['x'])
-        ax.plot(path['x'], path['y'], z_values)
-
-    plt.show()
-
-# Function to plot 3D surfaces based on contours
-def plot_3d_surfaces(path_data):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    for path in path_data:
-        x = path['x']
-        y = path['y']
-        z = path['z']
-
-        # Create vertices for each polygon slice
-        verts = [list(zip(x, y, [z] * len(x)))]
-        
-        # Create a Poly3DCollection object
-        poly = Poly3DCollection(verts, alpha=0.5)
-        
-        # Add the polygon to the axes
-        ax.add_collection3d(poly)
-
-    # Set the limits of the axes
-    ax.set_xlim([min(path['x']), max(path['x'])])
-    ax.set_ylim([min(path['y']), max(path['y'])])
-    ax.set_zlim([0, max(path['z'] for path in path_data)])
-
-    plt.show()
-
-# Function to show 3D plot with contours projecting upwards
-def show_wall_plot(path_data):
-    fig_3d = plt.figure()
+def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0):
+    fig_3d = plt.figure(figsize=(8, 6))
     ax_3d = fig_3d.add_subplot(111, projection='3d')
 
-    for path in path_data:
-        x = np.array(path['x'])
-        y = np.array(path['y'])
-        z = np.array([path['z']] * len(x))
+    # Apply scaling factor to all x and y coordinates from the paths
+    all_x = np.hstack([np.array(path['x']) * scale_factor for path in path_data])
+    all_y = np.hstack([np.array(path['y']) * scale_factor for path in path_data])
 
-        # Duplicate x, y, and z for the base of the vertical lines
-        x_base = np.repeat(x, 2)
-        y_base = np.repeat(y, 2)
-        z_base = np.repeat(z, 2)
-        z_base[::2] = 0  # Set every other z value to 0 for the base
+    # Determine the range for the grid
+    x_min, x_max = np.min(all_x), np.max(all_x)
+    y_min, y_max = np.min(all_y), np.max(all_y)
 
-        # Create vertical lines for each contour
-        ax_3d.plot(x_base, y_base, z_base, color='b')
-
-    # Set the limits of the axes
-    ax_3d.set_xlim([min(path['x']), max(path['x'])])
-    ax_3d.set_ylim([min(path['y']), max(path['y'])])
-    ax_3d.set_zlim([0, max(path['z'] for path in path_data)])
-
-    plt.show()
-
-def show_3d_contour_plot(path_data):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    for path in path_data:
-        # Combine x, y, and z values for triangulation
-        xyz = np.vstack((np.array(path['x']), np.array(path['y']), np.array([path['z']] * len(path['x'])))).T
-        if len(xyz) > 3:  # Need at least 4 points to create a triangulation
-            tri = Delaunay(xyz[:, :2])  # 2D Delaunay triangulation, ignore Z
-            ax.plot_trisurf(xyz[:, 0], xyz[:, 1], xyz[:, 2], triangles=tri.simplices, cmap='viridis', alpha=0.6)
-
-    ax.set_xlabel('X Axis')
-    ax.set_ylabel('Y Axis')
-    ax.set_zlabel('Z Axis')
-    plt.show()
-
-def interpolate_z_values(points, values, grid_size, method='linear', plot=False):
-    """
-    Interpolate z values on a grid.
-
-    Parameters:
-    points : ndarray of floats, shape (n, D)
-        Data point coordinates.
-    values : ndarray of float or complex, shape (n,)
-        Data values.
-    grid_size : tuple of int
-        Size of the grid (nx, ny).
-    method : str, optional
-        Method of interpolation. One of ['linear', 'nearest', 'cubic'].
-    plot : bool, optional
-        If True, plot the interpolated grid.
-
-    Returns:
-    grid_z : ndarray
-        Z values on the interpolated grid.
-    """
-
-    # Create grid
-    grid_x, grid_y = np.mgrid[0:1:complex(grid_size[0]), 0:1:complex(grid_size[1])]
-    grid_x_flat = grid_x.ravel()
-    grid_y_flat = grid_y.ravel()
-
-    # Interpolation
-    try:
-        grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method=method)
-        grid_z = grid_z.reshape(grid_x.shape)
-    except Exception as e:
-        print(f"An error occurred during interpolation: {e}")
-        return None
-
-    # Plotting
-    if plot:
-        plt.figure()
-        plt.imshow(grid_z.T, extent=(0,1,0,1), origin='lower')
-        plt.title(f'Interpolated Grid (method: {method})')
-        plt.scatter(points[:,0], points[:,1], c=values)
-        plt.colorbar()
-        plt.show()
-
-    return grid_z
-
-# Function to show 3D plot using RBF interpolation
-def show_3d_plot_with_rbf(path_data):
-    fig_3d = plt.figure()
-    ax_3d = fig_3d.add_subplot(111, projection='3d')
-
-    # Prepare data for interpolation
-    all_x = np.hstack([path['x'] for path in path_data])
-    all_y = np.hstack([path['y'] for path in path_data])
-    all_z = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
-
-    # Create an RBF interpolator
-    rbf_interpolator = Rbf(all_x, all_y, all_z, function='linear')
+    # Grid density
+    grid_density = 100
 
     # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), 1200), 
-                                 np.linspace(np.min(all_y), np.max(all_y), 1200))
-
-    # Interpolate z values on the grid using RBF
-    grid_z = rbf_interpolator(grid_x, grid_y)
-
-    # Create a surface plot
-    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
-    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
-
-    plt.show()
-
-# Function to show 3D plot with contours projecting upwards
-def show_3d_plot(path_data):
-    fig_3d = plt.figure()
-    ax_3d = fig_3d.add_subplot(111, projection='3d')
-
-    # Determine the limits for the grid
-    all_x = np.hstack([path['x'] for path in path_data])
-    all_y = np.hstack([path['y'] for path in path_data])
-
-    # Adjust the number of points in the grid (making the grid denser)
-    num_points = 600  # Increase this number for a denser grid
-
-    # Create a grid for the surface plot
-    grid_x, grid_y = np.meshgrid(np.linspace(np.min(all_x), np.max(all_x), num_points), 
-                                 np.linspace(np.min(all_y), np.max(all_y), num_points))
+    grid_x, grid_y = np.meshgrid(
+        np.linspace(x_min, x_max, grid_density),
+        np.linspace(y_min, y_max, grid_density)
+    )
 
     # Flatten the grid for griddata input
     grid_x_flat = grid_x.flatten()
     grid_y_flat = grid_y.flatten()
 
-    # Prepare contour data for interpolation
+    # Prepare scaled contour data for interpolation
     points = np.vstack([all_x, all_y]).T
     values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
 
-    # Interpolate z values on the grid
-    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest')  # You can experiment with 'cubic' or 'linear'
+    # Interpolate z values on the grid using 'nearest' to avoid NaNs
+    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest')
+
+    # Reshape the z values back into a grid
     grid_z = grid_z.reshape(grid_x.shape)
 
+    # Clip z values to enforce the maximum height constraint
+    grid_z = np.clip(grid_z, None, max_z_value)
+
     # Create a surface plot
-    surf = ax_3d.plot_surface(grid_x, grid_y, grid_z, cmap='viridis', alpha=0.8)
+    surf = ax_3d.plot_surface(
+        grid_x, grid_y, grid_z, 
+        cmap='viridis', alpha=0.6, 
+        linewidth=0, antialiased=True
+    )
+
+    # Add a color bar which maps values to colors.
     fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
+
+    # Set axes limits to cover the full range of x and y values
+    ax_3d.set_xlim(x_min, x_max)
+    ax_3d.set_ylim(y_min, y_max)
+    ax_3d.set_zlim(0, max_z_value)
 
     plt.show()
 
 # SVG file path
-# svg_file = './p5oil-modified.svg'
 svg_file = './p5oil.svg'
-# svg_file = './JtossSVG2.svg'
 
 # Extract and plot paths interactively
 path_data = plot_interactive_paths(extract_svg_paths(svg_file))
-
-# Plot the paths in 3D
-# plot_3d_paths(path_data)
-
-# plot_3d_surfaces(path_data)
-# show_3d_contour_plot(path_data)
-# show_wall_plot(path_data)
-
 show_3d_plot(path_data)
-
-# show_3d_plot_with_rbf(path_data)
