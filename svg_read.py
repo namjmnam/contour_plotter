@@ -72,7 +72,7 @@ def plot_interactive_paths(paths):
 
     return path_data
 
-def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6):
+def show_3d_plot_and_save_obj(path_data, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6, filename='output.obj'):
     fig_3d = plt.figure(figsize=figsize)
     ax_3d = fig_3d.add_subplot(111, projection='3d')
 
@@ -127,31 +127,32 @@ def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0, grid_density=100,
     ax_3d.set_zlim(0, max_z_value)
 
     plt.show()
+    # After creating the surface plot, save the grid to an OBJ file
+    save_grid_to_obj(grid_x, grid_y, grid_z, filename)
 
-def save_to_obj(path_data, filename="output.obj"):
-    with open(filename, "w") as file:
+def save_grid_to_obj(grid_x, grid_y, grid_z, filename):
+    with open(filename, 'w') as file:
         # Write vertices
-        for path in path_data:
-            for x, y, z in zip(path['x'], path['y'], np.full(len(path['x']), path['z'])):
-                file.write(f"v {x} {y} {z}\n")
+        for i in range(len(grid_x)):
+            for j in range(len(grid_x[0])):
+                file.write(f"v {grid_x[i][j]} {grid_y[i][j]} {grid_z[i][j]}\n")
 
-        # Since this example does not create a mesh with faces, 
-        # we will not write faces to the OBJ.
-        # Faces would be defined using indices of the vertices e.g., "f 1 2 3"
-
-    print(f"Saved 3D model to {filename}")
+        # Write faces (as quads)
+        for i in range(len(grid_x) - 1):
+            for j in range(len(grid_x[0]) - 1):
+                # OBJ files are 1-indexed
+                v1 = i * len(grid_x[0]) + j + 1
+                v2 = v1 + 1
+                v3 = v1 + len(grid_x[0]) + 1
+                v4 = v3 - 1
+                file.write(f"f {v1} {v2} {v3} {v4}\n")
 
 # SVG file path
 svg_file = './p5oil.svg'
 
 # Extract and plot paths interactively
 path_data = plot_interactive_paths(extract_svg_paths(svg_file))
-show_3d_plot(path_data, grid_density=200)
-
-# Example usage after 3D plot
-save_to_obj(path_data, "./my_3d_model.obj")
-
-
+show_3d_plot_and_save_obj(path_data, grid_density=2000)
 
 
 # dummy_path_data = [

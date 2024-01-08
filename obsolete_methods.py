@@ -218,3 +218,60 @@ def show_3d_plot_linear_interpolation(path_data, max_z_value=100, scale_factor=1
     ax_3d.set_zlim(0, max_z_value)
 
     plt.show()
+
+    
+def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6):
+    fig_3d = plt.figure(figsize=figsize)
+    ax_3d = fig_3d.add_subplot(111, projection='3d')
+
+    # Apply scaling factor to all x and y coordinates from the paths
+    all_x = np.hstack([np.array(path['x']) * scale_factor for path in path_data])
+    all_y = np.hstack([np.array(path['y']) * scale_factor for path in path_data])
+
+    # Determine the range for the grid
+    x_min, x_max = np.min(all_x), np.max(all_x)
+    y_min, y_max = np.min(all_y), np.max(all_y)
+
+    # Testing a small portion
+    # x_min, x_max = 700, 900
+    # y_min, y_max = 700, 900
+
+    # Create a grid for the surface plot
+    grid_x, grid_y = np.meshgrid(
+        np.linspace(x_min, x_max, grid_density),
+        np.linspace(y_min, y_max, grid_density)
+    )
+
+    # Flatten the grid for griddata input
+    grid_x_flat = grid_x.flatten()
+    grid_y_flat = grid_y.flatten()
+
+    # Prepare scaled contour data for interpolation
+    points = np.vstack([all_x, all_y]).T
+    values = np.hstack([np.full(len(path['x']), path['z']) for path in path_data])
+
+    # Interpolate z values on the grid using 'nearest' to avoid NaNs
+    grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest')
+
+    # Reshape the z values back into a grid
+    grid_z = grid_z.reshape(grid_x.shape)
+
+    # Clip z values to enforce the maximum height constraint
+    grid_z = np.clip(grid_z, None, max_z_value)
+
+    # Create a surface plot
+    surf = ax_3d.plot_surface(
+        grid_x, grid_y, grid_z, 
+        cmap=cmap, alpha=alpha, 
+        linewidth=0, antialiased=True
+    )
+
+    # Add a color bar which maps values to colors.
+    fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
+
+    # Set axes limits to cover the full range of x and y values
+    ax_3d.set_xlim(x_min, x_max)
+    ax_3d.set_ylim(y_min, y_max)
+    ax_3d.set_zlim(0, max_z_value)
+
+    plt.show()
