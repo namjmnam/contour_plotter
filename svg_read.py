@@ -72,8 +72,8 @@ def plot_interactive_paths(paths):
 
     return path_data
 
-def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0):
-    fig_3d = plt.figure(figsize=(8, 6))
+def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6):
+    fig_3d = plt.figure(figsize=figsize)
     ax_3d = fig_3d.add_subplot(111, projection='3d')
 
     # Apply scaling factor to all x and y coordinates from the paths
@@ -84,8 +84,9 @@ def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0):
     x_min, x_max = np.min(all_x), np.max(all_x)
     y_min, y_max = np.min(all_y), np.max(all_y)
 
-    # Grid density
-    grid_density = 100
+    # Testing a small portion
+    # x_min, x_max = 700, 900
+    # y_min, y_max = 700, 900
 
     # Create a grid for the surface plot
     grid_x, grid_y = np.meshgrid(
@@ -113,7 +114,7 @@ def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0):
     # Create a surface plot
     surf = ax_3d.plot_surface(
         grid_x, grid_y, grid_z, 
-        cmap='viridis', alpha=0.6, 
+        cmap=cmap, alpha=alpha, 
         linewidth=0, antialiased=True
     )
 
@@ -127,9 +128,34 @@ def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0):
 
     plt.show()
 
+def save_to_obj(path_data, filename="output.obj"):
+    with open(filename, "w") as file:
+        # Write vertices
+        for path in path_data:
+            for x, y, z in zip(path['x'], path['y'], np.full(len(path['x']), path['z'])):
+                file.write(f"v {x} {y} {z}\n")
+
+        # Since this example does not create a mesh with faces, 
+        # we will not write faces to the OBJ.
+        # Faces would be defined using indices of the vertices e.g., "f 1 2 3"
+
+    print(f"Saved 3D model to {filename}")
+
 # SVG file path
 svg_file = './p5oil.svg'
 
 # Extract and plot paths interactively
 path_data = plot_interactive_paths(extract_svg_paths(svg_file))
-show_3d_plot(path_data)
+show_3d_plot(path_data, grid_density=200)
+
+# Example usage after 3D plot
+save_to_obj(path_data, "./my_3d_model.obj")
+
+
+
+
+# dummy_path_data = [
+#     {'x': [0, 1, 2], 'y': [0, 1, 2], 'z': 50},
+#     {'x': [2, 3, 4], 'y': [2, 3, 4], 'z': 75}
+# ]
+# show_3d_plot(dummy_path_data, grid_density=10000)
