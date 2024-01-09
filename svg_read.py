@@ -15,15 +15,18 @@ tk_root.withdraw()  # We don't need a full GUI, so keep the root window from app
 # Function to extract paths from the SVG file
 def extract_svg_paths(svg_file):
     doc = minidom.parse(svg_file)  # Parse the SVG file
-    path_strings = [path.getAttribute('d') for path in doc.getElementsByTagName('path')]
+    paths = doc.getElementsByTagName('path')
+    path_data = [{'d': path.getAttribute('d'), 'class': path.getAttribute('class')} for path in paths]
     doc.unlink()
-    return path_strings
+    return path_data
 
 # Function to plot paths and add interactive points
 def plot_interactive_paths(paths):
     fig, ax = plt.subplots()
 
     path_data = []
+    outer_contours = []
+    inner_contours = []
     text_labels = []  # List to store text labels
 
     def on_pick(event):
@@ -44,8 +47,9 @@ def plot_interactive_paths(paths):
                 fig.canvas.draw_idle()  # Update the figure
 
     for index, path_string in enumerate(paths):
-        path = parse_path(path_string)
+        path = parse_path(path_string['d'])
         path_points = []
+        path_class = path_string['class']
 
         for segment in path:
             # Sampling points from each segment
@@ -57,6 +61,14 @@ def plot_interactive_paths(paths):
 
         x_values = [p.real for p in path_points]
         y_values = [p.imag for p in path_points]
+
+        if path_class=='outer':
+            outer_contours.append({'x': x_values, 'y': y_values, 'z': random_z})
+            continue
+
+        if path_class=='inner':
+            inner_contours.append({'x': x_values, 'y': y_values, 'z': random_z})
+            continue
 
         ax.plot(x_values, y_values, 'b')
 
@@ -70,9 +82,9 @@ def plot_interactive_paths(paths):
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
-    return path_data
+    return path_data, outer_contours, inner_contours
 
-def show_3d_plot_and_save_obj(path_data, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6, filename='output.obj'):
+def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6, filename='output.obj'):
     fig_3d = plt.figure(figsize=figsize)
     ax_3d = fig_3d.add_subplot(111, projection='3d')
 
@@ -83,10 +95,6 @@ def show_3d_plot_and_save_obj(path_data, max_z_value=100, scale_factor=1.0, grid
     # Determine the range for the grid
     x_min, x_max = np.min(all_x), np.max(all_x)
     y_min, y_max = np.min(all_y), np.max(all_y)
-
-    # Testing a small portion
-    # x_min, x_max = 700, 900
-    # y_min, y_max = 700, 900
 
     # Create a grid for the surface plot
     grid_x, grid_y = np.meshgrid(
@@ -111,6 +119,12 @@ def show_3d_plot_and_save_obj(path_data, max_z_value=100, scale_factor=1.0, grid
     # Clip z values to enforce the maximum height constraint
     grid_z = np.clip(grid_z, None, max_z_value)
 
+    # # Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
+    # for i in range(grid_z.shape[0]):
+    #     for j in range(grid_z.shape[1]):
+    #         if not is_point_inside_polygon((grid_x[i, j], grid_y[i, j]), outer_contour) or is_point_inside_polygon((grid_x[i, j], grid_y[i, j]), inner_contour):
+    #             grid_z[i, j] = 0
+
     # Create a surface plot
     surf = ax_3d.plot_surface(
         grid_x, grid_y, grid_z, 
@@ -128,7 +142,7 @@ def show_3d_plot_and_save_obj(path_data, max_z_value=100, scale_factor=1.0, grid
 
     plt.show()
     # After creating the surface plot, save the grid to an OBJ file
-    save_grid_to_obj(grid_x, grid_y, grid_z, filename)
+    # save_grid_to_obj(grid_x, grid_y, grid_z, filename)
 
 def save_grid_to_obj(grid_x, grid_y, grid_z, filename):
     with open(filename, 'w') as file:
@@ -148,15 +162,8 @@ def save_grid_to_obj(grid_x, grid_y, grid_z, filename):
                 file.write(f"f {v1} {v2} {v3} {v4}\n")
 
 # SVG file path
-svg_file = './p5oil.svg'
+svg_file = './p5fulldata1-modified.svg'
 
 # Extract and plot paths interactively
-path_data = plot_interactive_paths(extract_svg_paths(svg_file))
-show_3d_plot_and_save_obj(path_data, grid_density=2000)
-
-
-# dummy_path_data = [
-#     {'x': [0, 1, 2], 'y': [0, 1, 2], 'z': 50},
-#     {'x': [2, 3, 4], 'y': [2, 3, 4], 'z': 75}
-# ]
-# show_3d_plot(dummy_path_data, grid_density=10000)
+path_data, outer_contour, inner_contour = plot_interactive_paths(extract_svg_paths(svg_file))
+show_3d_plot_and_save_obj(path_data, outer_contour[0], inner_contour[0], grid_density=50)

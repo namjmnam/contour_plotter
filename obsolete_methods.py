@@ -275,3 +275,20 @@ def show_3d_plot(path_data, max_z_value=100, scale_factor=1.0, grid_density=100,
     ax_3d.set_zlim(0, max_z_value)
 
     plt.show()
+
+def is_point_inside_polygon(point, polygon):
+    """
+    Check if a point (x, y) is inside a given polygon using the ray casting method.
+    polygon is a list of (x, y) pairs.
+    """
+    x, y = point
+    inside = False
+    for i in range(len(polygon)):
+        x1, y1 = polygon[i]
+        x2, y2 = polygon[(i + 1) % len(polygon)]
+        if y > min(y1, y2) and y <= max(y1, y2) and x <= max(x1, x2):
+            if y1 != y2:
+                xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1
+            if x1 == x2 or x <= xinters:
+                inside = not inside
+    return inside
