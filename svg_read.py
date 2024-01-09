@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from svg.path import parse_path
+from svg.path.path import CubicBezier
+from svg.path.path import Line
 from xml.dom import minidom
 import tkinter as tk
 from tkinter import simpledialog
@@ -51,6 +53,14 @@ def plot_interactive_paths(paths):
         path_points = []
         path_class = path_string['class']
 
+        if path_class=='outer':
+            outer_contours.append(path)
+            continue
+
+        if path_class=='inner':
+            inner_contours.append(path)
+            continue
+
         for segment in path:
             # Sampling points from each segment
             segment_points = np.array([segment.point(t) for t in np.linspace(0, 1, 50)])
@@ -61,14 +71,6 @@ def plot_interactive_paths(paths):
 
         x_values = [p.real for p in path_points]
         y_values = [p.imag for p in path_points]
-
-        if path_class=='outer':
-            outer_contours.append({'x': x_values, 'y': y_values, 'z': random_z})
-            continue
-
-        if path_class=='inner':
-            inner_contours.append({'x': x_values, 'y': y_values, 'z': random_z})
-            continue
 
         ax.plot(x_values, y_values, 'b')
 
@@ -120,10 +122,10 @@ def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_val
     grid_z = np.clip(grid_z, None, max_z_value)
 
     # # Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
-    # for i in range(grid_z.shape[0]):
-    #     for j in range(grid_z.shape[1]):
-    #         if not is_point_inside_polygon((grid_x[i, j], grid_y[i, j]), outer_contour) or is_point_inside_polygon((grid_x[i, j], grid_y[i, j]), inner_contour):
-    #             grid_z[i, j] = 0
+    for i in range(grid_z.shape[0]):
+        for j in range(grid_z.shape[1]):
+            if not is_point_inside_path((grid_x[i, j], grid_y[i, j]), outer_contour) or is_point_inside_path((grid_x[i, j], grid_y[i, j]), inner_contour):
+                grid_z[i, j] = 0
 
     # Create a surface plot
     surf = ax_3d.plot_surface(
@@ -160,6 +162,49 @@ def save_grid_to_obj(grid_x, grid_y, grid_z, filename):
                 v3 = v1 + len(grid_x[0]) + 1
                 v4 = v3 - 1
                 file.write(f"f {v1} {v2} {v3} {v4}\n")
+
+def is_point_inside_path(x, y, path_d, num_segments=10):
+    """
+    Determine if a point (x, y) is inside the given SVG path.
+
+    :param x: X-coordinate of the point
+    :param y: Y-coordinate of the point
+    :param path_d: 'd' attribute of the SVG path
+    :param num_segments: Number of segments for approximating the Bezier curves
+    :return: True if the point is inside the path, False otherwise
+    """
+    def cubic_bezier_to_points(start, control1, control2, end):
+        points = []
+        for t in np.linspace(0, 1, num_segments):
+            point = (1-t)**3 * start + 3*(1-t)**2 * t * control1 + 3*(1-t) * t**2 * control2 + t**3 * end
+            points.append((point.real, point.imag))
+        return points
+
+    path = parse_path(path_d)
+    polygon = []
+    for segment in path:
+        if isinstance(segment, CubicBezier):
+            polygon.extend(cubic_bezier_to_points(segment.start, segment.control1, segment.control2, segment.end))
+        elif isinstance(segment, Line):
+            polygon.append((segment.end.real, segment.end.imag))
+        # Add other segment types if needed
+
+    # Point-in-polygon algorithm
+    n = len(polygon)
+    inside = False
+    p1x, p1y = polygon[0]
+    for i in range(n+1):
+        p2x, p2y = polygon[i % n]
+        if y > min(p1y, p2y):
+            if y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x, p1y = p2x, p2y
+
+    return inside
 
 # SVG file path
 svg_file = './p5fulldata1-modified.svg'
