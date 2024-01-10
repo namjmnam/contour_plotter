@@ -102,9 +102,13 @@ paths_data, outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg
 outer = outer_contour[0]
 inner = inner_contour[0]
 
-# Apply scaling factor to all x and y coordinates from the paths
-path_x = np.hstack([np.array(path['x']) for path in paths_data])
-path_y = np.hstack([np.array(path['y']) for path in paths_data])
+# # Add puter and inner paths manually
+# path_x = np.hstack([np.array(path['x']) for path in paths_data])
+# path_y = np.hstack([np.array(path['y']) for path in paths_data])
+# path_z = [0] * 6000
+# x = np.concatenate([x, path_x])
+# y = np.concatenate([y, path_y])
+# z = np.concatenate([z, path_z])
 
 # Define the grid (change the range and density as needed)
 # grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]
@@ -151,4 +155,3 @@ ax.set_xlim(95.47, 95.47+1705.53)
 ax.set_ylim(73.74, 73.74+1399.15)
 plt.show()
 
-# print(len(paths_data))
