@@ -142,8 +142,10 @@ def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_val
     fig_3d.colorbar(surf, ax=ax_3d, shrink=0.5, aspect=5, label='Height')
 
     # Set axes limits to cover the full range of x and y values
-    ax_3d.set_xlim(x_min, x_max)
-    ax_3d.set_ylim(y_min, y_max)
+    # ax_3d.set_xlim(x_min, x_max)
+    # ax_3d.set_ylim(y_min, y_max)
+    ax_3d.set_xlim(95.47, 95.47+1705.53)
+    ax_3d.set_ylim(73.74, 73.74+1399.15)
     ax_3d.set_zlim(floor, max_z_value)
 
     plt.show()

@@ -52,19 +52,30 @@ def is_point_inside_path(x, y, path, num_segments=10):
 
 # Function to plot paths and add interactive points
 def get_outer_inner(paths):
+    paths_data = []
     outer_contours = []
     inner_contours = []
 
     for index, path_string in enumerate(paths):
         path = parse_path(path_string['d'])
+        path_points = []
         path_class = path_string['class']
         if path_class=='outer':
             outer_contours.append(path)
-            continue
 
         if path_class=='inner':
             inner_contours.append(path)
-    return outer_contours, inner_contours
+
+        for segment in path:
+            # Sampling points from each segment
+            segment_points = np.array([segment.point(t) for t in np.linspace(0, 1, 50)])
+            path_points.extend(segment_points)
+
+        x_values = [p.real for p in path_points]
+        y_values = [p.imag for p in path_points]
+
+        paths_data.append({'x': x_values, 'y': y_values, 'z': 0})
+    return paths_data, outer_contours, inner_contours
 
 # Function to extract paths from the SVG file
 def extract_svg_paths(svg_file):
@@ -89,7 +100,7 @@ grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]
 # Perform interpolation
 grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
-outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg_file))
+paths_data, outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg_file))
 outer = outer_contour[0]
 inner = inner_contour[0]
 
@@ -97,7 +108,7 @@ inner = inner_contour[0]
 for i in range(grid_z.shape[0]):
     for j in range(grid_z.shape[1]):
         if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner):
-            grid_z[i, j] = 0
+            grid_z[i, j] = np.nan
 
 # Plotting 1
 plt.figure(figsize=(10, 8))
@@ -107,6 +118,8 @@ plt.xlabel('X Coordinate')
 plt.ylabel('Y Coordinate')
 plt.title('3D Contour Map')
 plt.scatter(x, y, c='black', marker='o')  # Add original data points to the plot
+plt.xlim(95.47, 95.47+1705.53)
+plt.ylim(73.74, 73.74+1399.15)
 plt.show()
 
 # Plotting 2
@@ -121,4 +134,6 @@ ax.set_xlabel('X Coordinate')
 ax.set_ylabel('Y Coordinate')
 ax.set_zlabel('Z Height')
 ax.set_title('3D Surface Plot')
+ax.set_xlim(95.47, 95.47+1705.53)
+ax.set_ylim(73.74, 73.74+1399.15)
 plt.show()
