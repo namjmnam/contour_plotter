@@ -124,7 +124,7 @@ def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_val
     # Clip z values to enforce the maximum height constraint
     grid_z = np.clip(grid_z, None, max_z_value)
 
-    # # Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
+    # Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
     for i in range(grid_z.shape[0]):
         for j in range(grid_z.shape[1]):
             if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer_contour) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner_contour):
