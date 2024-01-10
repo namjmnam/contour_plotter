@@ -1,5 +1,5 @@
-import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import csv
 
 # Function to extract paths and their classes from the SVG file
 def extract_svg_paths(svg_file):
@@ -13,9 +13,17 @@ def extract_svg_paths(svg_file):
 svg_file_path = './p5fulldata1-points.svg'
 point_data = extract_svg_paths(svg_file_path)
 
-# Output the path data
-for data in point_data:
-    x = (float(data['x1']) + float(data['x2']))/2
-    y = (float(data['y1']) + float(data['y2']))/2
-    z = float(data['class'].split('-')[1])
-    print(x, y, z)
+# Create and write to a CSV file
+with open('coordinates.csv', 'w', newline='') as csvfile:
+    fieldnames = ['X', 'Y', 'Z']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    # Write the header
+    writer.writeheader()
+
+    # Iterate over each data point and write to the CSV
+    for data in point_data:
+        x = (float(data['x1']) + float(data['x2'])) / 2
+        y = (float(data['y1']) + float(data['y2'])) / 2
+        z = float(data['class'].split('-')[1])
+        writer.writerow({'X': x, 'Y': y, 'Z': z})
