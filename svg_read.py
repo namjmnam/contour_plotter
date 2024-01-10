@@ -67,7 +67,8 @@ def plot_interactive_paths(paths):
             path_points.extend(segment_points)
 
         # Assign a random Z value to each path
-        random_z = random.uniform(1, 20)  # You can adjust the range as needed
+        # random_z = random.uniform(1, 20)  # You can adjust the range as needed
+        z_value = parse_z_from_class(path_class)  # Get z-value based on class name
 
         x_values = [p.real for p in path_points]
         y_values = [p.imag for p in path_points]
@@ -77,7 +78,7 @@ def plot_interactive_paths(paths):
         clickable_point, = ax.plot(x_values[0], y_values[0], 'ro', picker=5, markersize=8, gid=index)
         clickable_point.set_picker(5)
 
-        path_data.append({'x': x_values, 'y': y_values, 'z': random_z})
+        path_data.append({'x': x_values, 'y': y_values, 'z': z_value})
 
     fig.canvas.mpl_connect('pick_event', on_pick)
 
@@ -89,6 +90,7 @@ def plot_interactive_paths(paths):
 def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_value=100, scale_factor=1.0, grid_density=100, figsize=(12, 9), cmap='viridis', alpha=0.6, filename='output.obj'):
     fig_3d = plt.figure(figsize=figsize)
     ax_3d = fig_3d.add_subplot(111, projection='3d')
+    floor = -350
 
     # Apply scaling factor to all x and y coordinates from the paths
     all_x = np.hstack([np.array(path['x']) * scale_factor for path in path_data])
@@ -114,6 +116,7 @@ def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_val
 
     # Interpolate z values on the grid using 'nearest' to avoid NaNs
     grid_z = griddata(points, values, (grid_x_flat, grid_y_flat), method='nearest')
+    grid_z = grid_z.astype(float)  # Convert grid_z to float type
 
     # Reshape the z values back into a grid
     grid_z = grid_z.reshape(grid_x.shape)
@@ -125,7 +128,8 @@ def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_val
     for i in range(grid_z.shape[0]):
         for j in range(grid_z.shape[1]):
             if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer_contour) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner_contour):
-                grid_z[i, j] = 0
+                # grid_z[i, j] = floor
+                grid_z[i, j] = np.nan
 
     # Create a surface plot
     surf = ax_3d.plot_surface(
@@ -140,11 +144,20 @@ def show_3d_plot_and_save_obj(path_data, outer_contour, inner_contour, max_z_val
     # Set axes limits to cover the full range of x and y values
     ax_3d.set_xlim(x_min, x_max)
     ax_3d.set_ylim(y_min, y_max)
-    ax_3d.set_zlim(0, max_z_value)
+    ax_3d.set_zlim(floor, max_z_value)
 
     plt.show()
     # After creating the surface plot, save the grid to an OBJ file
     # save_grid_to_obj(grid_x, grid_y, grid_z, filename)
+
+# Function to parse z-value from class name
+def parse_z_from_class(class_name):
+    if class_name.startswith("contour-"):
+        try:
+            return int(class_name.split('-')[1]) * (-1)
+        except ValueError:
+            return 0  # Default to 0 if parsing fails
+    return 0
 
 def save_grid_to_obj(grid_x, grid_y, grid_z, filename):
     with open(filename, 'w') as file:
