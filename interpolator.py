@@ -60,11 +60,15 @@ def get_outer_inner(paths):
         path = parse_path(path_string['d'])
         path_points = []
         path_class = path_string['class']
+
         if path_class=='outer':
             outer_contours.append(path)
 
-        if path_class=='inner':
+        elif path_class=='inner':
             inner_contours.append(path)
+
+        else:
+            continue
 
         for segment in path:
             # Sampling points from each segment
@@ -94,15 +98,24 @@ x = df['X'].values
 y = df['Y'].values
 z = df['Z'].values
 
-# Define the grid (change the range and density as needed)
-grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]
-
-# Perform interpolation
-grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
-
 paths_data, outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg_file))
 outer = outer_contour[0]
 inner = inner_contour[0]
+
+# Apply scaling factor to all x and y coordinates from the paths
+path_x = np.hstack([np.array(path['x']) for path in paths_data])
+path_y = np.hstack([np.array(path['y']) for path in paths_data])
+
+# Define the grid (change the range and density as needed)
+# grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]
+grid_density = 50
+grid_x, grid_y = np.meshgrid(
+    np.linspace(min(x), max(x), grid_density),
+    np.linspace(min(y), max(y), grid_density)
+)
+
+# Perform interpolation
+grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
 # Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
 for i in range(grid_z.shape[0]):
@@ -137,3 +150,5 @@ ax.set_title('3D Surface Plot')
 ax.set_xlim(95.47, 95.47+1705.53)
 ax.set_ylim(73.74, 73.74+1399.15)
 plt.show()
+
+# print(len(paths_data))
