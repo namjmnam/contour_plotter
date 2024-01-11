@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from xml.dom import minidom
 import pandas as pd
 import numpy as np
+from xsec_collector import main as xsec
+from pixel_collector import main as pixel
 
 def is_point_inside_path(x, y, path, num_segments=10):
     """
@@ -102,13 +104,21 @@ paths_data, outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg
 outer = outer_contour[0]
 inner = inner_contour[0]
 
-# Add puter and inner paths manually
+# Add outer and inner paths manually
 # path_x = np.hstack([np.array(path['x']) for path in paths_data])
 # path_y = np.hstack([np.array(path['y']) for path in paths_data])
 # path_z = [0] * 6000
 # x = np.concatenate([x, path_x])
 # y = np.concatenate([y, path_y])
 # z = np.concatenate([z, path_z])
+
+# Add xsec coords mannually
+# xy_xsec = xsec()
+# z_xsec = pixel()
+# xyz_xsec = pd.concat([xy_xsec, z_xsec], axis=1)
+# x = np.concatenate([x, xyz_xsec['X']])
+# y = np.concatenate([y, xyz_xsec['Y']])
+# z = np.concatenate([z, xyz_xsec['Z']])
 
 # Define the grid (change the range and density as needed)
 # grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]

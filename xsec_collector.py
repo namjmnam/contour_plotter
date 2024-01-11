@@ -57,28 +57,32 @@ def interpolate_points(points, num_of_segments):
 
     return all_sections
 
-horizontal_vertical = []
+def main():
+    horizontal_vertical = []
+    svg_filename = './p5fulldata1-points.svg'
+    polyline_points = get_polyline_points(svg_filename)
+    for i in polyline_points:
+        # print(i)
+        # print(len(i))
+        horizontal_vertical.append(interpolate_points(i, 9))
+    # First one is x (horizontal)
+    # Second one is y (vertical)
+    # print(horizontal_vertical)
+    # for i in horizontal_vertical[0]:
+    #     print(i)
+    # for i in horizontal_vertical[1]:
+    #     print(i)
 
-# Example usage
-svg_filename = './p5fulldata1-points.svg'
-polyline_points = get_polyline_points(svg_filename)
-for i in polyline_points:
-    # print(i)
-    # print(len(i))
-    horizontal_vertical.append(interpolate_points(i, 9))
-# First one is x (horizontal)
-# Second one is y (vertical)
-# print(horizontal_vertical)
-# for i in horizontal_vertical[0]:
-#     print(i)
-# for i in horizontal_vertical[1]:
-#     print(i)
+    # plot_polyline_points(polyline_points)
+    # plot_polyline_points(horizontal_vertical[0]+horizontal_vertical[1])
 
-plot_polyline_points(polyline_points)
-plot_polyline_points(horizontal_vertical[0]+horizontal_vertical[1])
+    flat_list = [point for polyline in horizontal_vertical for section in polyline for point in section]
 
-flat_list = [point for polyline in horizontal_vertical for section in polyline for point in section]
+    # Create a DataFrame from the flat list
+    df = pd.DataFrame(flat_list, columns=['X', 'Y'])
+    # print(df)
+    return df
 
-# Create a DataFrame from the flat list
-df = pd.DataFrame(flat_list, columns=['X', 'Y'])
-print(df)
+if __name__ == "__main__":
+    returned_value = main()
+    print(returned_value)
