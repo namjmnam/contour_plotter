@@ -7,6 +7,10 @@ import os
 def pixel_counter(image_path):
     # Open the image
     with Image.open(image_path) as img:
+        # Convert 'P' mode images to 'RGBA' for consistent processing
+        if img.mode == 'P':
+            img = img.convert('RGBA')
+
         width, height = img.size
         mode = img.mode
 
