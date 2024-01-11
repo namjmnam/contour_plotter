@@ -102,7 +102,7 @@ paths_data, outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg
 outer = outer_contour[0]
 inner = inner_contour[0]
 
-# # Add puter and inner paths manually
+# Add puter and inner paths manually
 # path_x = np.hstack([np.array(path['x']) for path in paths_data])
 # path_y = np.hstack([np.array(path['y']) for path in paths_data])
 # path_z = [0] * 6000
@@ -153,5 +153,6 @@ ax.set_zlabel('Z Height')
 ax.set_title('3D Surface Plot')
 ax.set_xlim(95.47, 95.47+1705.53)
 ax.set_ylim(73.74, 73.74+1399.15)
+ax.set_zlim(0, 30)
 plt.show()
 
