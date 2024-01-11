@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
+import pandas as pd
 
 def get_polyline_points(svg_filename):
     tree = ET.parse(svg_filename)
@@ -30,26 +31,31 @@ def plot_polyline_points(polyline_points):
     plt.ylabel("Y Coordinate")
     plt.show()
 
-def interpolate_points(points, num_intermediate_points):
-    interpolated_points = []
+# Generate points separating sections into segments
+def interpolate_points(points, num_of_segments):
+    all_sections = []
+
     for i in range(len(points) - 1):
         p1 = points[i]
         p2 = points[i + 1]
 
         # Calculate the step size for each coordinate
-        dx = (p2[0] - p1[0]) / (num_intermediate_points + 1)
-        dy = (p2[1] - p1[1]) / (num_intermediate_points + 1)
+        dx = (p2[0] - p1[0]) / (num_of_segments + 1)
+        dy = (p2[1] - p1[1]) / (num_of_segments + 1)
 
         # Create the list of interpolated points for this segment
         segment_points = [p1]
-        for j in range(1, num_intermediate_points + 1):
+        for j in range(1, num_of_segments + 1):
             new_point = (p1[0] + j * dx, p1[1] + j * dy)
             segment_points.append(new_point)
-        segment_points.append(p2)
 
-        interpolated_points.append(segment_points)
+        # Add the next point only if it's the last segment
+        if i == len(points) - 2:
+            segment_points.append(p2)
 
-    return interpolated_points
+        all_sections.append(segment_points)
+
+    return all_sections
 
 horizontal_vertical = []
 
@@ -57,12 +63,22 @@ horizontal_vertical = []
 svg_filename = './p5fulldata1-points.svg'
 polyline_points = get_polyline_points(svg_filename)
 for i in polyline_points:
-    print(i)
-    print(len(i))
-    horizontal_vertical.append(interpolate_points(i, 10))
+    # print(i)
+    # print(len(i))
+    horizontal_vertical.append(interpolate_points(i, 9))
 # First one is x (horizontal)
 # Second one is y (vertical)
-print(horizontal_vertical)
+# print(horizontal_vertical)
+# for i in horizontal_vertical[0]:
+#     print(i)
+# for i in horizontal_vertical[1]:
+#     print(i)
 
 plot_polyline_points(polyline_points)
 plot_polyline_points(horizontal_vertical[0]+horizontal_vertical[1])
+
+flat_list = [point for polyline in horizontal_vertical for section in polyline for point in section]
+
+# Create a DataFrame from the flat list
+df = pd.DataFrame(flat_list, columns=['X', 'Y'])
+print(df)
