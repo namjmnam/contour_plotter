@@ -34,8 +34,8 @@ def pixel_counter(image_path):
                         black_pixel_counts[x] += 1
                 else:
                     raise ValueError(f"Unsupported image mode: {mode}")
-
-        return black_pixel_counts
+        return_list = [x/8 for x in black_pixel_counts] # Assume 8 pixels = 1m
+        return return_list
 
 def get_all_pics(folder_path):
     pics = []

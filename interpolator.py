@@ -113,12 +113,12 @@ inner = inner_contour[0]
 # z = np.concatenate([z, path_z])
 
 # Add xsec coords mannually
-# xy_xsec = xsec()
-# z_xsec = pixel()
-# xyz_xsec = pd.concat([xy_xsec, z_xsec], axis=1)
-# x = np.concatenate([x, xyz_xsec['X']])
-# y = np.concatenate([y, xyz_xsec['Y']])
-# z = np.concatenate([z, xyz_xsec['Z']])
+xy_xsec = xsec()
+z_xsec = pixel()
+xyz_xsec = pd.concat([xy_xsec, z_xsec], axis=1)
+x = np.concatenate([x, xyz_xsec['X']])
+y = np.concatenate([y, xyz_xsec['Y']])
+z = np.concatenate([z, xyz_xsec['Z']])
 
 # Define the grid (change the range and density as needed)
 # grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]
