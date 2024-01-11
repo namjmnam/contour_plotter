@@ -104,15 +104,15 @@ paths_data, outer_contour, inner_contour = get_outer_inner(extract_svg_paths(svg
 outer = outer_contour[0]
 inner = inner_contour[0]
 
-# Add outer and inner paths manually
-# path_x = np.hstack([np.array(path['x']) for path in paths_data])
-# path_y = np.hstack([np.array(path['y']) for path in paths_data])
-# path_z = [0] * 6000
-# x = np.concatenate([x, path_x])
-# y = np.concatenate([y, path_y])
-# z = np.concatenate([z, path_z])
+# Add outer and inner paths manually (optional)
+path_x = np.hstack([np.array(path['x']) for path in paths_data])
+path_y = np.hstack([np.array(path['y']) for path in paths_data])
+path_z = [0] * 6000
+x = np.concatenate([x, path_x])
+y = np.concatenate([y, path_y])
+z = np.concatenate([z, path_z])
 
-# Add xsec coords mannually
+# Add xsec coords mannually (optional)
 xy_xsec = xsec()
 z_xsec = pixel()
 xyz_xsec = pd.concat([xy_xsec, z_xsec], axis=1)
@@ -131,11 +131,11 @@ grid_x, grid_y = np.meshgrid(
 # Perform interpolation
 grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
-# Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
-# for i in range(grid_z.shape[0]):
-#     for j in range(grid_z.shape[1]):
-#         if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner):
-#             grid_z[i, j] = np.nan
+# Set z values to 0 for points outside the "outer" contour or inside the "inner" contour (may be optional or mandatory)
+for i in range(grid_z.shape[0]):
+    for j in range(grid_z.shape[1]):
+        if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner):
+            grid_z[i, j] = np.nan
 
 # Plotting 1
 plt.figure(figsize=(10, 8))

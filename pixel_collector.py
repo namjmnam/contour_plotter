@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 import os
 import pandas as pd
 
-# Divide by 8 by default
+# Divide by 8 by default: pixels per meter
 scale = 8
 
 def pixel_counter(image_path):
