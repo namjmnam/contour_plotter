@@ -5,6 +5,9 @@ from scipy.interpolate import interp1d
 import os
 import pandas as pd
 
+# Divide by 8 by default
+scale = 8
+
 def pixel_counter(image_path):
     # Open the image
     with Image.open(image_path) as img:
@@ -34,7 +37,7 @@ def pixel_counter(image_path):
                         black_pixel_counts[x] += 1
                 else:
                     raise ValueError(f"Unsupported image mode: {mode}")
-        return_list = [x/8 for x in black_pixel_counts] # Assume 8 pixels = 1m
+        return_list = [x/scale for x in black_pixel_counts] # Assume 8 pixels = 1m
         return return_list
 
 def get_all_pics(folder_path):
@@ -132,7 +135,7 @@ def main():
         full_pixels+=segment
         interpolated_segment = interpolate_and_sample(segment, 11, plot_type='line')
         full_interpolated+=list(interpolated_segment)[:-1] # Remove overlapping element from the last of the list
-    full_interpolated+=[51.0] # Re-add the last element of the last segment, which will always be 51
+    full_interpolated+=[51.0/scale] # Re-add the last element of the last segment, which will always be 51 (and divide by 8)
 
     # plot_data(full_pixels, plot_type='line')
     # plot_data(full_interpolated, plot_type='line')

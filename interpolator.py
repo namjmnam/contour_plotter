@@ -132,10 +132,10 @@ grid_x, grid_y = np.meshgrid(
 grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
 # Set z values to 0 for points outside the "outer" contour or inside the "inner" contour
-for i in range(grid_z.shape[0]):
-    for j in range(grid_z.shape[1]):
-        if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner):
-            grid_z[i, j] = np.nan
+# for i in range(grid_z.shape[0]):
+#     for j in range(grid_z.shape[1]):
+#         if not is_point_inside_path(grid_x[i, j], grid_y[i, j], outer) or is_point_inside_path(grid_x[i, j], grid_y[i, j], inner):
+#             grid_z[i, j] = np.nan
 
 # Plotting 1
 plt.figure(figsize=(10, 8))
