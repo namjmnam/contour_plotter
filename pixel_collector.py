@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import os
+import pandas as pd
 
 def pixel_counter(image_path):
     # Open the image
@@ -105,7 +106,7 @@ def interpolate_and_sample(y_values, num_samples=50, plot_type='scatter'):
     # plt.show()
     return y_samples
 
-# For the first one
+# For the first one (vertical)
 full_pixels = []
 full_interpolated = []
 for i in get_all_pics('./height1'):
@@ -115,22 +116,29 @@ for i in get_all_pics('./height1'):
     full_interpolated+=list(interpolated_segment)[:-1] # Remove overlapping element from the last of the list
 full_interpolated+=[0.0] # Re-add the last element of the last segment, which will always be 0
 
-plot_data(full_pixels, plot_type='line')
-plot_data(full_interpolated, plot_type='line')
-print(len(full_interpolated))
+# plot_data(full_pixels, plot_type='line')
+# plot_data(full_interpolated, plot_type='line')
+# print(len(full_interpolated))
+df1 = pd.DataFrame(full_interpolated, columns=['Z'])
+# print('vertical')
+# print(df1)
 
-# For the second one
-# full_pixels = []
-# full_interpolated = []
-# for i in get_all_pics('./height2'):
-#     segment = pixel_counter(i)
-#     full_pixels+=segment
-#     interpolated_segment = interpolate_and_sample(segment, 11, plot_type='line')
-#     full_interpolated+=list(interpolated_segment)[:-1] # Remove overlapping element from the last of the list
-# full_interpolated+=[51.0] # Re-add the last element of the last segment, which will always be 51
+# For the second one (horizontal)
+full_pixels = []
+full_interpolated = []
+for i in get_all_pics('./height2'):
+    segment = pixel_counter(i)
+    full_pixels+=segment
+    interpolated_segment = interpolate_and_sample(segment, 11, plot_type='line')
+    full_interpolated+=list(interpolated_segment)[:-1] # Remove overlapping element from the last of the list
+full_interpolated+=[51.0] # Re-add the last element of the last segment, which will always be 51
 
 # plot_data(full_pixels, plot_type='line')
 # plot_data(full_interpolated, plot_type='line')
+# print(len(full_interpolated))
+df2 = pd.DataFrame(full_interpolated, columns=['Z'])
+# print('horizontal')
+# print(df2)
 
-a = pixel_counter('./height2/d.png')
-print(a)
+concatenated_df = pd.concat([df2, df1], ignore_index=True) # horizontal first
+print(concatenated_df)
